@@ -6,8 +6,10 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.time.Instant;
 
 @RestController
 @RequestMapping("/api/users")
@@ -27,13 +29,14 @@ public class UserController {
             return new ResponseEntity<>(HttpStatus.CONFLICT); // 409 Conflict
         }
         
-        // Ensure default tracking fields are set
+        // Ensure default tracking fields are set if null (CRITICAL for JPA)
         if (newUser.getRegisteredEvents() == null) {
-            newUser.setRegisteredEvents(java.util.Collections.emptyList());
+            newUser.setRegisteredEvents(Collections.emptyList());
         }
-        if (newUser.getJoinedDate() == null) {
-            newUser.setJoinedDate(java.time.Instant.now().toString());
-        }
+        // Set Joined Date (Used by the frontend's local storage simulation on first sign-up)
+        newUser.setJoinedDate(Instant.now().toString());
+        // Set Initial Last Login
+        newUser.setLastLogin(Instant.now().toString());
 
         User savedUser = userRepository.save(newUser);
         return new ResponseEntity<>(savedUser, HttpStatus.CREATED); // 201 Created
@@ -46,12 +49,15 @@ public class UserController {
 
         if (userOptional.isPresent()) {
             User user = userOptional.get();
+            
             // Simple password check
             if (user.getPassword().equals(loginAttempt.getPassword())) {
-                // Update last login time
-                user.setLastLogin(java.time.Instant.now().toString());
+                
+                // Update last login time and save to database
+                user.setLastLogin(Instant.now().toString());
                 userRepository.save(user);
-                return ResponseEntity.ok(user); // 200 OK
+                
+                return ResponseEntity.ok(user); // 200 OK, returns user data
             }
         }
         return new ResponseEntity<>(HttpStatus.UNAUTHORIZED); // 401 Unauthorized
@@ -60,6 +66,7 @@ public class UserController {
     // 3. Endpoint to fetch ALL users (GET /api/users - For Admin Panel)
     @GetMapping
     public List<User> getAllUsers() {
+        // This fetches all users from the live PostgreSQL database for the admin panel
         return userRepository.findAll();
     }
 }
