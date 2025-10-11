@@ -20,35 +20,33 @@ public class UserController {
         this.userRepository = userRepository;
     }
 
-    // 1. Endpoint for User Registration (Simulates signup from index.html)
-    // Front-end should send: username, password, semester
+    // 1. Endpoint for User Registration (POST /api/users/signup)
     @PostMapping("/signup")
     public ResponseEntity<User> signupUser(@RequestBody User newUser) {
         if (userRepository.existsById(newUser.getUsername())) {
             return new ResponseEntity<>(HttpStatus.CONFLICT); // 409 Conflict
         }
         
-        // Ensure default lists/dates are set (especially for first-time signups)
+        // Ensure default tracking fields are set
         if (newUser.getRegisteredEvents() == null) {
             newUser.setRegisteredEvents(java.util.Collections.emptyList());
         }
         if (newUser.getJoinedDate() == null) {
             newUser.setJoinedDate(java.time.Instant.now().toString());
         }
-        // NOTE: Password hashing is skipped for simplicity but needed in production
 
         User savedUser = userRepository.save(newUser);
         return new ResponseEntity<>(savedUser, HttpStatus.CREATED); // 201 Created
     }
 
-    // 2. Endpoint for User Login (Simulates validation from index.html)
+    // 2. Endpoint for User Login (POST /api/users/login)
     @PostMapping("/login")
     public ResponseEntity<User> loginUser(@RequestBody User loginAttempt) {
         Optional<User> userOptional = userRepository.findById(loginAttempt.getUsername());
 
         if (userOptional.isPresent()) {
             User user = userOptional.get();
-            // Simple password check (should be secure hash comparison in production)
+            // Simple password check
             if (user.getPassword().equals(loginAttempt.getPassword())) {
                 // Update last login time
                 user.setLastLogin(java.time.Instant.now().toString());
@@ -59,7 +57,7 @@ public class UserController {
         return new ResponseEntity<>(HttpStatus.UNAUTHORIZED); // 401 Unauthorized
     }
 
-    // 3. Endpoint to fetch ALL users (For Admin Panel)
+    // 3. Endpoint to fetch ALL users (GET /api/users - For Admin Panel)
     @GetMapping
     public List<User> getAllUsers() {
         return userRepository.findAll();
