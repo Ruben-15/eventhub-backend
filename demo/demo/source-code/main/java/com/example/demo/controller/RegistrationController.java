@@ -29,7 +29,8 @@ public class RegistrationController {
         Optional<User> userOptional = userRepository.findByUsername(username);
 
         if (userOptional.isEmpty()) {
-            return ResponseEntity.notFound().body("User not found.");
+            // FIX 1: Use .notFound().body(...) for 404 response with a message
+            return ResponseEntity.notFound().build(); 
         }
 
         User user = userOptional.get();
@@ -39,8 +40,10 @@ public class RegistrationController {
             // Remove event ID from the list
             if (registeredEvents.remove(eventId)) {
                 userRepository.save(user);
-                return ResponseEntity.ok("Registration cancelled.");
+                // FIX 2: Use .ok().body(...) for successful 200 response
+                return ResponseEntity.ok().body("Registration cancelled."); 
             }
+            // FIX 3: Use .badRequest().body(...) for 400 response
             return ResponseEntity.badRequest().body("Not currently registered.");
         } 
         
@@ -48,9 +51,11 @@ public class RegistrationController {
         if (!registeredEvents.contains(eventId)) {
             registeredEvents.add(eventId);
             userRepository.save(user);
-            return ResponseEntity.ok("Registration successful.");
+            // FIX 4: Use .ok().body(...) for successful 200 response
+            return ResponseEntity.ok().body("Registration successful.");
         }
         
+        // FIX 5: Use .badRequest().body(...) for 400 response
         return ResponseEntity.badRequest().body("Already registered.");
     }
 }
