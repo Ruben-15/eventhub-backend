@@ -29,12 +29,14 @@ public class UserController {
             return new ResponseEntity<>(HttpStatus.CONFLICT); // 409 Conflict
         }
         
-        // Ensure default tracking fields are set if null (CRITICAL for JPA)
+        // Ensure default tracking fields are set
         if (newUser.getRegisteredEvents() == null) {
             newUser.setRegisteredEvents(Collections.emptyList());
         }
-        // Set Joined Date (Used by the frontend's local storage simulation on first sign-up)
-        newUser.setJoinedDate(Instant.now().toString());
+        // Set Joined Date
+        if (newUser.getJoinedDate() == null) {
+            newUser.setJoinedDate(Instant.now().toString());
+        }
         // Set Initial Last Login
         newUser.setLastLogin(Instant.now().toString());
 
@@ -50,7 +52,7 @@ public class UserController {
         if (userOptional.isPresent()) {
             User user = userOptional.get();
             
-            // Simple password check
+            // Simple password check (This validates the user against the DB)
             if (user.getPassword().equals(loginAttempt.getPassword())) {
                 
                 // Update last login time and save to database
@@ -60,13 +62,26 @@ public class UserController {
                 return ResponseEntity.ok(user); // 200 OK, returns user data
             }
         }
-        return new ResponseEntity<>(HttpStatus.UNAUTHORIZED); // 401 Unauthorized
+        return new ResponseEntity<>(HttpStatus.UNAUTHORIZED); // 401 Unauthorized (Invalid credentials)
     }
 
-    // 3. Endpoint to fetch ALL users (GET /api/users - For Admin Panel)
+    // 3. Endpoint to fetch ALL users (GET /api/users - CRITICAL for Admin Panel)
     @GetMapping
     public List<User> getAllUsers() {
         // This fetches all users from the live PostgreSQL database for the admin panel
         return userRepository.findAll();
+    }
+    
+    // 4. Endpoint to fetch a single user's registrations (GET /api/users/{username}/registrations - CRITICAL for home.html)
+    @GetMapping("/{username}/registrations")
+    public ResponseEntity<List<Long>> getUserRegistrations(@PathVariable String username) {
+        Optional<User> userOptional = userRepository.findById(username);
+        
+        if (userOptional.isPresent()) {
+            // Return the list of registered event IDs
+            return ResponseEntity.ok(userOptional.get().getRegisteredEvents());
+        }
+        // Return empty list if user not found (safe default)
+        return ResponseEntity.ok(java.util.Collections.emptyList());
     }
 }
