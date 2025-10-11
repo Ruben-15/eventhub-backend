@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import java.time.LocalDateTime;
 
 @Entity
+@Table(name = "events") // <--- CRITICAL FIX: Forces table name for PostgreSQL
 public class Event {
 
     @Id
@@ -23,9 +24,14 @@ public class Event {
 
     // 🛑 NEW CRITICAL FIELD: Stores comma-separated semesters (e.g., "S1, S3, S5") 🛑
     private String semester; 
+    
+    // 🛑 FIELD 1 OF 2 ADDED FROM FRONTEND: Max Capacity 🛑
+    private int maxCapacity;
+    
+    // 🛑 FIELD 2 OF 2 ADDED FROM FRONTEND: Requires Registration 🛑
+    private boolean requiresRegistration;
 
     // Required: Default (No-Args) Constructor
-    // 🛑 CRITICAL FIX: Changed from protected to public 🛑
     public Event() {} 
 
     // --- GETTERS AND SETTERS ---
@@ -35,6 +41,8 @@ public class Event {
 
     public String getName() { return name; }
     public void setName(String name) { this.name = name; }
+    
+    // ... (All existing getters/setters for description, date, location, status, featured, imageUrl, semester) ...
 
     public String getDescription() { return description; }
     public void setDescription(String description) { this.description = description; }
@@ -51,11 +59,17 @@ public class Event {
     public boolean isFeatured() { return featured; }
     public void setFeatured(boolean featured) { this.featured = featured; }
 
-    // ⭐ GETTER AND SETTER FOR imageUrl ⭐
     public String getImageUrl() { return imageUrl; }
     public void setImageUrl(String imageUrl) { this.imageUrl = imageUrl; }
     
-    // 🛑 NEW GETTER AND SETTER FOR semester 🛑
     public String getSemester() { return semester; }
     public void setSemester(String semester) { this.semester = semester; }
+    
+    // 🛑 GETTER AND SETTER FOR MAX CAPACITY 🛑
+    public int getMaxCapacity() { return maxCapacity; }
+    public void setMaxCapacity(int maxCapacity) { this.maxCapacity = maxCapacity; }
+    
+    // 🛑 GETTER AND SETTER FOR REQUIRES REGISTRATION 🛑
+    public boolean isRequiresRegistration() { return requiresRegistration; }
+    public void setRequiresRegistration(boolean requiresRegistration) { this.requiresRegistration = requiresRegistration; }
 }
